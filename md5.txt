@@ -1,0 +1,1 @@
+6c7847b0f7e62785be30360570bf6ddb libfreetype.so.6
