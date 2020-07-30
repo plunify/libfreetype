@@ -1,0 +1,18 @@
+diff -up ft2demos-2.3.11/Makefile.more-demos freetype-2.3.11/ft2demos-2.3.11/Makefile
+--- ft2demos-2.3.11/Makefile.more-demos	2009-10-22 16:02:26.000000000 -0400
++++ ft2demos-2.3.11/Makefile	2009-10-22 16:02:32.000000000 -0400
+@@ -296,10 +296,10 @@ else
+   # The following programs are not compiled automatically; either comment
+   # out the affected line or use the program name as a Makefile target.
+   #
+-  # EXES += ftchkwd
+-  # EXES += ftmemchk
+-  # EXES += ftpatchk
+-  # EXES += fttimer
++  EXES += ftchkwd
++  EXES += ftmemchk
++  EXES += ftpatchk
++  EXES += fttimer
+   # EXES += testname
+ 
+   exes: $(EXES:%=$(BIN_DIR_2)/%$E)

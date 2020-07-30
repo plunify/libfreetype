@@ -1,0 +1,705 @@
+--- freetype-2.8/builds/unix/unix-cc.in.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/builds/unix/unix-cc.in	2018-06-07 19:16:35.881770695 +0200
+@@ -109,6 +109,6 @@ CCexe        := $(CCraw_build)	# used to
+ LINK_LIBRARY = $(LIBTOOL) --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
+                           -rpath $(libdir) -version-info $(version_info) \
+                           $(LDFLAGS) -no-undefined \
+-                          -export-symbols $(EXPORTS_LIST)
++                          # -export-symbols $(EXPORTS_LIST)
+ 
+ # EOF
+--- freetype-2.8/ft2demos-2.8/src/ftview.c.api	2017-05-11 18:31:16.000000000 +0200
++++ freetype-2.8/ft2demos-2.8/src/ftview.c	2018-06-04 16:53:29.960331386 +0200
+@@ -1531,8 +1531,8 @@
+       case FT_ENCODING_SJIS:
+         encoding = "SJIS";
+         break;
+-      case FT_ENCODING_PRC:
+-        encoding = "PRC";
++      case FT_ENCODING_GB2312:
++        encoding = "GB2312";
+         break;
+       case FT_ENCODING_BIG5:
+         encoding = "Big5";
+--- freetype-2.8/include/freetype/freetype.h.api	2017-05-13 06:28:40.000000000 +0200
++++ freetype-2.8/include/freetype/freetype.h	2018-06-04 16:53:29.961331388 +0200
+@@ -766,15 +766,14 @@ FT_BEGIN_HEADER
+     FT_ENC_TAG( FT_ENCODING_UNICODE,   'u', 'n', 'i', 'c' ),
+ 
+     FT_ENC_TAG( FT_ENCODING_SJIS,    's', 'j', 'i', 's' ),
+-    FT_ENC_TAG( FT_ENCODING_PRC,     'g', 'b', ' ', ' ' ),
++    FT_ENC_TAG( FT_ENCODING_GB2312,  'g', 'b', ' ', ' ' ),
+     FT_ENC_TAG( FT_ENCODING_BIG5,    'b', 'i', 'g', '5' ),
+     FT_ENC_TAG( FT_ENCODING_WANSUNG, 'w', 'a', 'n', 's' ),
+     FT_ENC_TAG( FT_ENCODING_JOHAB,   'j', 'o', 'h', 'a' ),
+ 
+     /* for backward compatibility */
+-    FT_ENCODING_GB2312     = FT_ENCODING_PRC,
+     FT_ENCODING_MS_SJIS    = FT_ENCODING_SJIS,
+-    FT_ENCODING_MS_GB2312  = FT_ENCODING_PRC,
++    FT_ENCODING_MS_GB2312  = FT_ENCODING_GB2312,
+     FT_ENCODING_MS_BIG5    = FT_ENCODING_BIG5,
+     FT_ENCODING_MS_WANSUNG = FT_ENCODING_WANSUNG,
+     FT_ENCODING_MS_JOHAB   = FT_ENCODING_JOHAB,
+@@ -799,7 +798,7 @@ FT_BEGIN_HEADER
+ #define ft_encoding_latin_1         FT_ENCODING_ADOBE_LATIN_1
+ #define ft_encoding_latin_2         FT_ENCODING_OLD_LATIN_2
+ #define ft_encoding_sjis            FT_ENCODING_SJIS
+-#define ft_encoding_gb2312          FT_ENCODING_PRC
++#define ft_encoding_gb2312          FT_ENCODING_GB2312
+ #define ft_encoding_big5            FT_ENCODING_BIG5
+ #define ft_encoding_wansung         FT_ENCODING_WANSUNG
+ #define ft_encoding_johab           FT_ENCODING_JOHAB
+--- freetype-2.8/include/freetype/ftcache.h.api	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/include/freetype/ftcache.h	2018-06-04 16:53:29.961331388 +0200
+@@ -667,8 +667,8 @@ FT_BEGIN_HEADER
+   typedef struct  FTC_ImageTypeRec_
+   {
+     FTC_FaceID  face_id;
+-    FT_UInt     width;
+-    FT_UInt     height;
++    FT_Int      width;
++    FT_Int      height;
+     FT_Int32    flags;
+ 
+   } FTC_ImageTypeRec;
+--- freetype-2.8/include/freetype/ftimage.h.api	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/include/freetype/ftimage.h	2018-06-04 16:53:29.962331389 +0200
+@@ -260,13 +260,13 @@ FT_BEGIN_HEADER
+   /*                                                                       */
+   typedef struct  FT_Bitmap_
+   {
+-    unsigned int    rows;
+-    unsigned int    width;
++    int             rows;
++    int             width;
+     int             pitch;
+     unsigned char*  buffer;
+-    unsigned short  num_grays;
+-    unsigned char   pixel_mode;
+-    unsigned char   palette_mode;
++    short           num_grays;
++    char            pixel_mode;
++    char            palette_mode;
+     void*           palette;
+ 
+   } FT_Bitmap;
+--- freetype-2.8/include/freetype/ftmm.h.api	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/include/freetype/ftmm.h	2018-06-04 16:53:29.962331389 +0200
+@@ -177,14 +177,10 @@ FT_BEGIN_HEADER
+   /*                                                                       */
+   /*    strid  :: The entry in `name' table identifying this instance.     */
+   /*                                                                       */
+-  /*    psid   :: The entry in `name' table identifying a PostScript name  */
+-  /*              for this instance.                                       */
+-  /*                                                                       */
+   typedef struct  FT_Var_Named_Style_
+   {
+     FT_Fixed*  coords;
+     FT_UInt    strid;
+-    FT_UInt    psid;   /* since 2.7.1 */
+ 
+   } FT_Var_Named_Style;
+ 
+--- freetype-2.8/include/freetype/ttnameid.h.api	2017-05-03 23:26:45.000000000 +0200
++++ freetype-2.8/include/freetype/ttnameid.h	2018-06-04 16:53:29.963331391 +0200
+@@ -1217,9 +1217,9 @@ FT_BEGIN_HEADER
+   /* */
+ 
+   /* for backward compatibility with older FreeType versions */
+-#define TT_UCR_ARABIC_PRESENTATION_A         \
++#define TT_UCR_ARABIC_PRESENTATIONS_A         \
+           TT_UCR_ARABIC_PRESENTATION_FORMS_A
+-#define TT_UCR_ARABIC_PRESENTATION_B         \
++#define TT_UCR_ARABIC_PRESENTATIONS_B         \
+           TT_UCR_ARABIC_PRESENTATION_FORMS_B
+ 
+ #define TT_UCR_COMBINING_DIACRITICS          \
+--- freetype-2.8/include/freetype/tttables.h.api	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/include/freetype/tttables.h	2018-06-04 17:18:26.699449088 +0200
+@@ -383,7 +383,7 @@ FT_BEGIN_HEADER
+     FT_Short   xAvgCharWidth;
+     FT_UShort  usWeightClass;
+     FT_UShort  usWidthClass;
+-    FT_UShort  fsType;
++    FT_Short   fsType;
+     FT_Short   ySubscriptXSize;
+     FT_Short   ySubscriptYSize;
+     FT_Short   ySubscriptXOffset;
+@@ -427,11 +427,6 @@ FT_BEGIN_HEADER
+     FT_UShort  usBreakChar;
+     FT_UShort  usMaxContext;
+ 
+-    /* only version 5 and higher: */
+-
+-    FT_UShort  usLowerOpticalPointSize;       /* in twips (1/20th points) */
+-    FT_UShort  usUpperOpticalPointSize;       /* in twips (1/20th points) */
+-
+   } TT_OS2;
+ 
+ 
+@@ -596,43 +591,41 @@ FT_BEGIN_HEADER
+   /*    @FT_Get_Sfnt_Table API function.                                   */
+   /*                                                                       */
+   /* <Values>                                                              */
+-  /*    FT_SFNT_HEAD :: To access the font's @TT_Header structure.         */
++  /*    ft_sfnt_head :: To access the font's @TT_Header structure.         */
+   /*                                                                       */
+-  /*    FT_SFNT_MAXP :: To access the font's @TT_MaxProfile structure.     */
++  /*    ft_sfnt_maxp :: To access the font's @TT_MaxProfile structure.     */
+   /*                                                                       */
+-  /*    FT_SFNT_OS2  :: To access the font's @TT_OS2 structure.            */
++  /*    ft_sfnt_os2  :: To access the font's @TT_OS2 structure.            */
+   /*                                                                       */
+-  /*    FT_SFNT_HHEA :: To access the font's @TT_HoriHeader structure.     */
++  /*    ft_sfnt_hhea :: To access the font's @TT_HoriHeader structure.     */
+   /*                                                                       */
+-  /*    FT_SFNT_VHEA :: To access the font's @TT_VertHeader structure.     */
++  /*    ft_sfnt_vhea :: To access the font's @TT_VertHeader structure.     */
+   /*                                                                       */
+-  /*    FT_SFNT_POST :: To access the font's @TT_Postscript structure.     */
++  /*    ft_sfnt_post :: To access the font's @TT_Postscript structure.     */
+   /*                                                                       */
+-  /*    FT_SFNT_PCLT :: To access the font's @TT_PCLT structure.           */
++  /*    ft_sfnt_pclt :: To access the font's @TT_PCLT structure.           */
+   /*                                                                       */
+   typedef enum  FT_Sfnt_Tag_
+   {
+-    FT_SFNT_HEAD,
+-    FT_SFNT_MAXP,
+-    FT_SFNT_OS2,
+-    FT_SFNT_HHEA,
+-    FT_SFNT_VHEA,
+-    FT_SFNT_POST,
+-    FT_SFNT_PCLT,
++    ft_sfnt_head = 0,
++    ft_sfnt_maxp = 1,
++    ft_sfnt_os2  = 2,
++    ft_sfnt_hhea = 3,
++    ft_sfnt_vhea = 4,
++    ft_sfnt_post = 5,
++    ft_sfnt_pclt = 6,
+ 
+-    FT_SFNT_MAX
++    sfnt_max
+ 
+   } FT_Sfnt_Tag;
+ 
+-  /* these constants are deprecated; use the corresponding `FT_Sfnt_Tag' */
+-  /* values instead                                                      */
+-#define ft_sfnt_head  FT_SFNT_HEAD
+-#define ft_sfnt_maxp  FT_SFNT_MAXP
+-#define ft_sfnt_os2   FT_SFNT_OS2
+-#define ft_sfnt_hhea  FT_SFNT_HHEA
+-#define ft_sfnt_vhea  FT_SFNT_VHEA
+-#define ft_sfnt_post  FT_SFNT_POST
+-#define ft_sfnt_pclt  FT_SFNT_PCLT
++#define FT_SFNT_HEAD ft_sfnt_head
++#define FT_SFNT_MAXP ft_sfnt_maxp
++#define FT_SFNT_OS2  ft_sfnt_os2 
++#define FT_SFNT_HHEA ft_sfnt_hhea
++#define FT_SFNT_VHEA ft_sfnt_vhea
++#define FT_SFNT_POST ft_sfnt_post
++#define FT_SFNT_PCLT ft_sfnt_pclt
+ 
+ 
+   /*************************************************************************/
+--- freetype-2.8/src/sfnt/sfdriver.c.api	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/sfnt/sfdriver.c	2018-06-04 16:53:29.964331392 +0200
+@@ -867,16 +867,9 @@
+       SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
+ 
+       FT_Long  instance = ( ( face->root.face_index & 0x7FFF0000L ) >> 16 ) - 1;
+-      FT_UInt  psid     = mm_var->namedstyle[instance].psid;
+ 
+       char*  ps_name = NULL;
+ 
+-
+-      /* try first to load the name string with index `postScriptNameID' */
+-      if ( psid == 6                      ||
+-           ( psid > 255 && psid < 32768 ) )
+-        (void)sfnt->get_name( face, (FT_UShort)psid, &ps_name );
+-
+       if ( ps_name )
+       {
+         result = ps_name;
+--- freetype-2.8/src/sfnt/sfobjs.c.api	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/sfnt/sfobjs.c	2018-06-04 16:53:29.964331392 +0200
+@@ -311,7 +311,7 @@
+       { TT_PLATFORM_MICROSOFT,     TT_MS_ID_UCS_4,      FT_ENCODING_UNICODE },
+       { TT_PLATFORM_MICROSOFT,     TT_MS_ID_UNICODE_CS, FT_ENCODING_UNICODE },
+       { TT_PLATFORM_MICROSOFT,     TT_MS_ID_SJIS,       FT_ENCODING_SJIS },
+-      { TT_PLATFORM_MICROSOFT,     TT_MS_ID_PRC,        FT_ENCODING_PRC },
++      { TT_PLATFORM_MICROSOFT,     TT_MS_ID_GB2312,     FT_ENCODING_GB2312 },
+       { TT_PLATFORM_MICROSOFT,     TT_MS_ID_BIG_5,      FT_ENCODING_BIG5 },
+       { TT_PLATFORM_MICROSOFT,     TT_MS_ID_WANSUNG,    FT_ENCODING_WANSUNG },
+       { TT_PLATFORM_MICROSOFT,     TT_MS_ID_JOHAB,      FT_ENCODING_JOHAB }
+--- freetype-2.8/src/sfnt/ttload.c.api	2017-04-22 07:39:36.000000000 +0200
++++ freetype-2.8/src/sfnt/ttload.c	2018-06-04 16:53:29.965331393 +0200
+@@ -1164,15 +1164,6 @@
+       FT_FRAME_END
+     };
+ 
+-    /* `OS/2' version 5 and newer */
+-    static const FT_Frame_Field  os2_fields_extra5[] =
+-    {
+-      FT_FRAME_START( 4 ),
+-        FT_FRAME_USHORT( usLowerOpticalPointSize ),
+-        FT_FRAME_USHORT( usUpperOpticalPointSize ),
+-      FT_FRAME_END
+-    };
+-
+ 
+     /* We now support old Mac fonts where the OS/2 table doesn't  */
+     /* exist.  Simply put, we set the `version' field to 0xFFFF   */
+@@ -1193,8 +1184,6 @@
+     os2->usDefaultChar           = 0;
+     os2->usBreakChar             = 0;
+     os2->usMaxContext            = 0;
+-    os2->usLowerOpticalPointSize = 0;
+-    os2->usUpperOpticalPointSize = 0xFFFF;
+ 
+     if ( os2->version >= 0x0001 )
+     {
+@@ -1207,13 +1196,6 @@
+         /* only version 2 tables */
+         if ( FT_STREAM_READ_FIELDS( os2_fields_extra2, os2 ) )
+           goto Exit;
+-
+-        if ( os2->version >= 0x0005 )
+-        {
+-          /* only version 5 tables */
+-          if ( FT_STREAM_READ_FIELDS( os2_fields_extra5, os2 ) )
+-            goto Exit;
+-        }
+       }
+     }
+ 
+--- freetype-2.8/src/truetype/ttgxvar.c.api	2017-05-02 14:37:55.000000000 +0200
++++ freetype-2.8/src/truetype/ttgxvar.c	2018-06-04 16:53:29.966331395 +0200
+@@ -2155,7 +2155,7 @@
+           *c = FT_GET_LONG();
+ 
+         if ( usePsName )
+-          ns->psid = FT_GET_USHORT();
++          (void) FT_GET_USHORT();
+ 
+         ft_var_to_normalized( face,
+                               fvar_head.axisCount,
+@@ -2206,7 +2206,6 @@
+             ns = &mmvar->namedstyle[fvar_head.instanceCount];
+ 
+             ns->strid = strid;
+-            ns->psid  = TT_NAME_ID_PS_NAME;
+ 
+             a = mmvar->axis;
+             c = ns->coords;
+--- freetype-2.8/devel/ftoption.h.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/devel/ftoption.h	2018-06-07 11:30:34.431455285 +0200
+@@ -903,7 +903,7 @@ FT_BEGIN_HEADER
+    * This macro is obsolete.  Support has been removed in FreeType
+    * version 2.5.
+    */
+-/* #define FT_CONFIG_OPTION_OLD_INTERNALS */
++#define FT_CONFIG_OPTION_OLD_INTERNALS
+ 
+ 
+   /*
+--- freetype-2.8/include/freetype/config/ftoption.h.orig	2017-05-01 09:39:06.000000000 +0200
++++ freetype-2.8/include/freetype/config/ftoption.h	2018-06-07 11:30:53.662506048 +0200
+@@ -934,7 +934,7 @@ FT_BEGIN_HEADER
+    * This macro is obsolete.  Support has been removed in FreeType
+    * version 2.5.
+    */
+-/* #define FT_CONFIG_OPTION_OLD_INTERNALS */
++#define FT_CONFIG_OPTION_OLD_INTERNALS
+ 
+ 
+   /*
+--- freetype-2.8/include/freetype/ftcache.h.orig	2018-06-07 11:33:07.663882169 +0200
++++ freetype-2.8/include/freetype/ftcache.h	2018-06-07 11:33:23.127947502 +0200
+@@ -1049,6 +1049,54 @@ FT_BEGIN_HEADER
+   /* */
+ 
+ 
++#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
++
++  /*@***********************************************************************/
++  /*                                                                       */
++  /* <Struct>                                                              */
++  /*    FTC_FontRec                                                        */
++  /*                                                                       */
++  /* <Description>                                                         */
++  /*    A simple structure used to describe a given `font' to the cache    */
++  /*    manager.  Note that a `font' is the combination of a given face    */
++  /*    with a given character size.                                       */
++  /*                                                                       */
++  /* <Fields>                                                              */
++  /*    face_id    :: The ID of the face to use.                           */
++  /*                                                                       */
++  /*    pix_width  :: The character width in integer pixels.               */
++  /*                                                                       */
++  /*    pix_height :: The character height in integer pixels.              */
++  /*                                                                       */
++  typedef struct  FTC_FontRec_
++  {
++    FTC_FaceID  face_id;
++    FT_UShort   pix_width;
++    FT_UShort   pix_height;
++
++  } FTC_FontRec;
++
++
++  /* */
++
++
++  typedef FTC_FontRec*  FTC_Font;
++
++
++  FT_EXPORT( FT_Error )
++  FTC_Manager_Lookup_Face( FTC_Manager  manager,
++                           FTC_FaceID   face_id,
++                           FT_Face     *aface );
++
++  FT_EXPORT( FT_Error )
++  FTC_Manager_Lookup_Size( FTC_Manager  manager,
++                           FTC_Font     font,
++                           FT_Face     *aface,
++                           FT_Size     *asize );
++
++#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
++
++
+ FT_END_HEADER
+ 
+ #endif /* FTCACHE_H_ */
+--- freetype-2.8/src/cache/ftcmanag.c.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/cache/ftcmanag.c	2018-06-07 11:28:18.663096906 +0200
+@@ -701,4 +701,55 @@
+   }
+ 
+ 
++#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
++
++  FT_EXPORT_DEF( FT_Error )
++  FTC_Manager_Lookup_Face( FTC_Manager  manager,
++                           FTC_FaceID   face_id,
++                           FT_Face     *aface )
++  {
++    return FTC_Manager_LookupFace( manager, face_id, aface );
++  }
++
++
++  FT_EXPORT( FT_Error )
++  FTC_Manager_Lookup_Size( FTC_Manager  manager,
++                           FTC_Font     font,
++                           FT_Face     *aface,
++                           FT_Size     *asize )
++  {
++    FTC_ScalerRec  scaler;
++    FT_Error       error;
++    FT_Size        size;
++    FT_Face        face;
++
++
++    scaler.face_id = font->face_id;
++    scaler.width   = font->pix_width;
++    scaler.height  = font->pix_height;
++    scaler.pixel   = TRUE;
++    scaler.x_res   = 0;
++    scaler.y_res   = 0;
++
++    error = FTC_Manager_LookupSize( manager, &scaler, &size );
++    if ( error )
++    {
++      face = NULL;
++      size = NULL;
++    }
++    else
++      face = size->face;
++
++    if ( aface )
++      *aface = face;
++
++    if ( asize )
++      *asize = size;
++
++    return error;
++  }
++
++#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
++
++
+ /* END */
+--- freetype-2.8/ft2demos-2.8/graph/x11/grx11.c.orig	2016-10-19 06:55:23.000000000 +0200
++++ freetype-2.8/ft2demos-2.8/graph/x11/grx11.c	2018-06-07 16:41:52.626432650 +0200
+@@ -1404,8 +1404,8 @@ typedef  unsigned long   uint32;
+                                     RootWindow( display, screen ),
+                                     0,
+                                     0,
+-                                    (unsigned int)bitmap->width,
+-                                    (unsigned int)bitmap->rows,
++                                    bitmap->width,
++                                    bitmap->rows,
+                                     10,
+                                     format->x_depth,
+                                     InputOutput,
+--- freetype-2.8/src/base/ftbitmap.c.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/base/ftbitmap.c	2018-06-07 18:26:08.488060315 +0200
+@@ -90,7 +90,7 @@
+ 
+     if ( pitch < 0 )
+       pitch = -pitch;
+-    size = (FT_ULong)pitch * source->rows;
++    size = (FT_ULong)( pitch * source->rows );
+ 
+     if ( target->buffer )
+     {
+@@ -100,7 +100,7 @@
+ 
+       if ( target_pitch < 0 )
+         target_pitch = -target_pitch;
+-      target_size = (FT_ULong)target_pitch * target->rows;
++      target_size = (FT_ULong)( target_pitch * target->rows );
+ 
+       if ( target_size != size )
+         (void)FT_QREALLOC( target->buffer, target_size, size );
+@@ -156,7 +156,7 @@
+     int             pitch;
+     int             new_pitch;
+     FT_UInt         bpp;
+-    FT_UInt         i, width, height;
++    FT_Int          i, width, height;
+     unsigned char*  buffer = NULL;
+ 
+ 
+@@ -194,17 +194,17 @@
+     if ( ypixels == 0 && new_pitch <= pitch )
+     {
+       /* zero the padding */
+-      FT_UInt  bit_width = (FT_UInt)pitch * 8;
+-      FT_UInt  bit_last  = ( width + xpixels ) * bpp;
++      FT_Int  bit_width = pitch * 8;
++      FT_Int  bit_last  = ( width + xpixels ) * bpp;
+ 
+ 
+       if ( bit_last < bit_width )
+       {
+         FT_Byte*  line  = bitmap->buffer + ( bit_last >> 3 );
+         FT_Byte*  end   = bitmap->buffer + pitch;
+-        FT_UInt   shift = bit_last & 7;
++        FT_Int    shift = bit_last & 7;
+         FT_UInt   mask  = 0xFF00U >> shift;
+-        FT_UInt   count = height;
++        FT_Int    count = height;
+ 
+ 
+         for ( ; count > 0; count--, line += pitch, end += pitch )
+@@ -233,7 +233,7 @@
+     /* thus take care of the flow direction         */
+     if ( bitmap->pitch > 0 )
+     {
+-      FT_UInt  len = ( width * bpp + 7 ) >> 3;
++      FT_Int  len = ( width * bpp + 7 ) >> 3;
+ 
+ 
+       for ( i = 0; i < bitmap->rows; i++ )
+@@ -243,7 +243,7 @@
+     }
+     else
+     {
+-      FT_UInt  len = ( width * bpp + 7 ) >> 3;
++      FT_Int  len = ( width * bpp + 7 ) >> 3;
+ 
+ 
+       for ( i = 0; i < bitmap->rows; i++ )
+@@ -275,8 +275,7 @@
+   {
+     FT_Error        error;
+     unsigned char*  p;
+-    FT_Int          i, x, pitch;
+-    FT_UInt         y;
++    FT_Int          i, x, y, pitch;
+     FT_Int          xstr, ystr;
+ 
+ 
+@@ -420,8 +419,8 @@
+       p += bitmap->pitch;
+     }
+ 
+-    bitmap->width += (FT_UInt)xstr;
+-    bitmap->rows += (FT_UInt)ystr;
++    bitmap->width += xstr;
++    bitmap->rows += ystr;
+ 
+     return FT_Err_Ok;
+   }
+@@ -506,8 +505,8 @@
+     case FT_PIXEL_MODE_LCD_V:
+     case FT_PIXEL_MODE_BGRA:
+       {
+-        FT_Int    pad, old_target_pitch, target_pitch;
+-        FT_ULong  old_size;
++        FT_Int   pad, old_target_pitch, target_pitch;
++        FT_Long  old_size;
+ 
+ 
+         old_target_pitch = target->pitch;
+@@ -617,7 +616,7 @@
+     case FT_PIXEL_MODE_LCD:
+     case FT_PIXEL_MODE_LCD_V:
+       {
+-        FT_UInt  width = source->width;
++        FT_Int   width = source->width;
+         FT_UInt  i;
+ 
+ 
+--- freetype-2.8/src/pcf/pcfdrivr.c.orig	2018-06-07 11:42:57.757375204 +0200
++++ freetype-2.8/src/pcf/pcfdrivr.c	2018-06-07 16:59:25.832896549 +0200
+@@ -523,10 +523,10 @@ THE SOFTWARE.
+ 
+     metric = face->metrics + glyph_index;
+ 
+-    bitmap->rows       = (unsigned int)( metric->ascent +
+-                                         metric->descent );
+-    bitmap->width      = (unsigned int)( metric->rightSideBearing -
+-                                         metric->leftSideBearing );
++    bitmap->rows       = ( metric->ascent +
++                           metric->descent );
++    bitmap->width      = ( metric->rightSideBearing -
++                           metric->leftSideBearing );
+     bitmap->num_grays  = 1;
+     bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
+ 
+--- freetype-2.8/src/raster/ftraster.c.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/raster/ftraster.c	2018-06-07 18:07:14.977278387 +0200
+@@ -2479,7 +2479,7 @@
+       {
+         e1 = TRUNC( e1 );
+ 
+-        if ( e1 >= 0 && (ULong)e1 < ras.target.rows )
++        if ( e1 >= 0 && e1 < ras.target.rows )
+         {
+           Byte   f1;
+           PByte  bits;
+@@ -2589,7 +2589,7 @@
+         /* bounding box instead                                           */
+         if ( pxl < 0 )
+           pxl = e1;
+-        else if ( (ULong)( TRUNC( pxl ) ) >= ras.target.rows )
++        else if ( ( TRUNC( pxl ) ) >= ras.target.rows )
+           pxl = e2;
+ 
+         /* check that the other pixel isn't set */
+@@ -2604,9 +2604,9 @@
+         if ( ras.target.pitch > 0 )
+           bits += (Long)( ras.target.rows - 1 ) * ras.target.pitch;
+ 
+-        if ( e1 >= 0                     &&
+-             (ULong)e1 < ras.target.rows &&
+-             *bits & f1                  )
++        if ( e1 >= 0              &&
++             e1 < ras.target.rows &&
++             *bits & f1           )
+           goto Exit;
+       }
+       else
+@@ -2615,7 +2615,7 @@
+ 
+     e1 = TRUNC( pxl );
+ 
+-    if ( e1 >= 0 && (ULong)e1 < ras.target.rows )
++    if ( e1 >= 0 && e1 < ras.target.rows )
+     {
+       FT_TRACE7(( " -> y=%d (drop-out)", e1 ));
+ 
+--- freetype-2.8/src/sfnt/pngshim.c.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/sfnt/pngshim.c	2018-06-07 18:08:07.825359421 +0200
+@@ -209,10 +209,10 @@
+     }
+ 
+     if ( !populate_map_and_metrics                            &&
+-         ( (FT_UInt)x_offset + metrics->width  > map->width ||
+-           (FT_UInt)y_offset + metrics->height > map->rows  ||
+-           pix_bits != 32                                   ||
+-           map->pixel_mode != FT_PIXEL_MODE_BGRA            ) )
++         ( x_offset + metrics->width  > map->width ||
++           y_offset + metrics->height > map->rows  ||
++           pix_bits != 32                          ||
++           map->pixel_mode != FT_PIXEL_MODE_BGRA   ) )
+     {
+       error = FT_THROW( Invalid_Argument );
+       goto Exit;
+@@ -270,7 +270,7 @@
+       map->num_grays  = 256;
+ 
+       /* reject too large bitmaps similarly to the rasterizer */
+-      if ( map->rows > 0x7FFF || map->width > 0x7FFF )
++      if ( map->rows > 0x4FFF || map->width > 0x4FFF )
+       {
+         error = FT_THROW( Array_Too_Large );
+         goto DestroyExit;
+@@ -346,7 +346,7 @@
+ 
+     if ( populate_map_and_metrics )
+     {
+-      /* this doesn't overflow: 0x7FFF * 0x7FFF * 4 < 2^32 */
++      /* this doesn't overflow: 0x4FFF * 0x4FFF * 4 < 2^31 */
+       FT_ULong  size = map->rows * (FT_ULong)map->pitch;
+ 
+ 
+--- freetype-2.8/src/sfnt/ttsbit.c.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/sfnt/ttsbit.c	2018-06-07 18:31:57.610612501 +0200
+@@ -705,7 +705,7 @@
+     FT_Error    error = FT_Err_Ok;
+     FT_Byte*    line;
+     FT_Int      pitch, width, height, line_bits, h;
+-    FT_UInt     bit_height, bit_width;
++    FT_Int      bit_height, bit_width;
+     FT_Bitmap*  bitmap;
+ 
+     FT_UNUSED( recurse_count );
+--- freetype-2.8/src/smooth/ftgrays.c.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/smooth/ftgrays.c	2018-06-07 17:01:09.008070697 +0200
+@@ -1880,7 +1880,7 @@ typedef ptrdiff_t  FT_PtrDist;
+         ras.target.origin = target_map->buffer;
+       else
+         ras.target.origin = target_map->buffer
+-              + ( target_map->rows - 1 ) * (unsigned int)target_map->pitch;
++              + (unsigned int) (( target_map->rows - 1 ) * target_map->pitch);
+ 
+       ras.target.pitch = target_map->pitch;
+ 
+--- freetype-2.8/src/smooth/ftsmooth.c.orig	2017-05-01 09:35:12.000000000 +0200
++++ freetype-2.8/src/smooth/ftsmooth.c	2018-06-07 17:01:51.040141641 +0200
+@@ -292,8 +292,8 @@
+ 
+     bitmap->pixel_mode = FT_PIXEL_MODE_GRAY;
+     bitmap->num_grays  = 256;
+-    bitmap->width      = (unsigned int)width;
+-    bitmap->rows       = (unsigned int)height;
++    bitmap->width      = width;
++    bitmap->rows       = height;
+     bitmap->pitch      = pitch;
+ 
+     /* translate outline to render it into the bitmap */
+--- freetype-2.8/src/winfonts/winfnt.c.orig	2017-03-30 12:20:23.000000000 +0200
++++ freetype-2.8/src/winfonts/winfnt.c	2018-06-07 18:21:47.809648016 +0200
+@@ -1038,7 +1038,7 @@
+ 
+     p = font->fnt_frame + offset;
+ 
+-    bitmap->width = FT_NEXT_USHORT_LE( p );
++    bitmap->width = FT_NEXT_SHORT_LE( p );
+ 
+     /* jump to glyph entry */
+     if ( new_format )
+@@ -1079,7 +1079,7 @@
+     /* allocate and build bitmap */
+     {
+       FT_Memory  memory = FT_FACE_MEMORY( slot->face );
+-      FT_UInt    pitch  = ( bitmap->width + 7 ) >> 3;
++      FT_Int     pitch  = ( bitmap->width + 7 ) >> 3;
+       FT_Byte*   column;
+       FT_Byte*   write;
+ 
